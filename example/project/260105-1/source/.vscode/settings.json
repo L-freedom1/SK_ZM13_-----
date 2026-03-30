@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "my_io.C": "cpp",
+        "my_io.H": "cpp",
+        "note_profile.h": "c",
+        "sx126x-board.h": "c",
+        "mspi.h": "c"
+    }
+}
