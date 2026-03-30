@@ -1,8 +1,8 @@
 /*
  * @Author: dujianhuang
  * @Date: 2019-08-30 15:24:46
- * @LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
- * @LastEditTime: 2024-04-18 16:21:17
+ * @LastEditors: leodjh1 33412386+leodjh1@users.noreply.github.com
+ * @LastEditTime: 2026-03-30 10:16:03
  */
 /**********************************************************/
 /*  公司名称：泉州时刻有限公司     			              */
@@ -210,269 +210,53 @@ void fAckHost(u8 cmd1)
 
 void pAddSendBuf(u8 bId,u8 bEvent)
 {
-		u8 len;
-		u8 check;
-		len = 0;
-		//参数检查
-		if((service.m_proto_set!=PROTO_SHIKE)&&(service.m_proto_set!=PROTO_ZH202)&&(service.m_proto_set!=PROTO_SHIKE_PLUS))
-		{
-			user_fs_init();
-		}
+	u8 len = 0;
+	u8 event_id = 0xFF;
 
-		#define	SHIKE_ALM		0x20	//普通报警/开门
-		#define	SHIKE_ALM_EMG	0x40	//紧急报警
-		#define	SHIKE_LOW_BAT	0xb0	//低压
-		#define	SHIKE_PLUS		0x00	//心跳
-		#define	SHIKE_CLOSE		0x70	//关门
-		#define	SHIKE_FC		0x60	//防拆报警
-		#define	SHIKE_TEST		0x50	//测试键
-		////#define	SHIKE_FCRST		0x80	//防拆恢复
-		#define SHIKE_FCRST		0x061
-		#define	SHIKE_BATRST	0xb1
-		#define	SHIKE_PLUS_FC	0xC3	//防拆状态心跳
-		#define SHIKE_PLUS_BAT	0xc1	//低压心跳
-		#define SHIKE_PLUS_ERR	0xc4	//防拆和低压都异常
-		
-		if(IS_PROTO_SHIKE)
-		{
-			check = 0;
-			
-			if(service.m_proto_set==PROTO_SHIKE_PLUS)
-			{
-				g_readySendBuf[SITE_CMD] = Up_SHIKE_PROTO_NEW;
-			}
-			else
-			{
-				g_readySendBuf[SITE_CMD] = Up_SHIKE_PROTO; 					//命令编码
-			}
-			
-			
-			//无线数据（4 字节）
-			g_readySendBuf[SITE_DATA_STAT + len++] = g_device_info.s_cpu_id[4];			//UID低2字节
-			check += g_readySendBuf[SITE_DATA_STAT + len-1];	
-			g_readySendBuf[SITE_DATA_STAT + len++] = g_device_info.s_cpu_id[5];	
-			check += g_readySendBuf[SITE_DATA_STAT + len-1];
-			
+	// 报警参数1字节
+	switch (bEvent)
+	{
+	case EVENT_TEST:
+		event_id = ZONE_EVT_ALARM;
+		break;
+	case EVENT_ALM:
+	// case EVENT_TEMP:
+		event_id = ZONE_EVT_ALARM;
+		break;
+	case EVENT_BAT:
+		event_id = ZONE_EVT_LOW_POWER;
+		break;
+	case EVENT_FCALM:
+		event_id = ZONE_EVT_ALARM;
+		break;
+	case EVENT_FCRST: // 防拆恢复
+	case EVENT_PLUS:
+	case EVENT_BOOT:
+	case EVENT_PLUS_AG:
+	default:
+		event_id = ZONE_EVT_HEARTBEAT;
+		break;
+	}
 	
-			//报警参数1字节
-			switch (bEvent)
-			{
-			case EVENT_TEST:
-					if(service.m_proto_set==PROTO_SHIKE)
-					{
-						g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_ALM;
-					}
-					else
-					{
-						g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_TEST;
-					}					
-					break;
-			case EVENT_ALM:
-			case EVENT_TEMP:
-			// case EVENT_TEMP_LOW:
-				g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_ALM;	  	  //普通报警
-				break;
-			case EVENT_BAT:
-				g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_LOW_BAT;	  //电池低压
-				break;
-//			case EVENT_BAT_RST:
-//				g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_BATRST;	  //电池低压
-//				break;
-			case EVENT_FCALM:
-				g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_FC;	 	  //防拆报警
-				break;	
-			case EVENT_FCRST:
-				if(service.m_proto_set==PROTO_SHIKE)
-				{
-					g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_PLUS;
-				}
-				else
-				{
-					g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_FCRST;	 	  //防拆恢复
-				}				
-				break;
-			
-			case EVENT_PLUS:
-			case EVENT_BOOT:
-			case EVENT_PLUS_AG:
-			default:
-				if(service.m_proto_set==PROTO_SHIKE_PLUS)
-				{
-					if(g_cbSta.isFcOpen == FC_OPEN)
-					{
-						if(service.m_battery_state)
-						{
-							g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_PLUS_ERR;	  //心跳
-						}
-						else
-						{
-							g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_PLUS_FC;	  //心跳
-						}
-						
-					}
-					else if(service.m_battery_state)
-					{
-						g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_PLUS_BAT;
-					}
-					else
-					{
-						g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_PLUS;	  //心跳
-					}
-				
-				}
-				else
-				{
-					g_readySendBuf[SITE_DATA_STAT + len++] = SHIKE_PLUS;	  //心跳
-				}
-				
-				break;
-			}
-			if(service.m_proto_set==PROTO_SHIKE_PLUS)
-			{
-				//烟雾浓度
-				if(device_info.state.F_SM_ERR)
-				{
-					g_readySendBuf[SITE_DATA_STAT + len++] = CODE_SMOKE_ERR;
-				}
-				else
-				{
-					g_readySendBuf[SITE_DATA_STAT + len++] = service.m_smoke;
-				}
-				//温度
-				g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp;
-				//电池电压状态
-				g_readySendBuf[SITE_DATA_STAT + len++] = service.m_battery_state;
-				//电池电压
-				g_readySendBuf[SITE_DATA_STAT + len++] =   service.m_battery>>8;
-				g_readySendBuf[SITE_DATA_STAT + len++] =   service.m_battery&0xff;
-				//防拆状态
-				g_readySendBuf[SITE_DATA_STAT + len++] = g_cbSta.isFcOpen;
-			}
-			else
-			{
-				check += g_readySendBuf[SITE_DATA_STAT + len-1];				
-				g_readySendBuf[SITE_DATA_STAT + len++] = check;				//前 3 字节累加和	
-			}
-			
-				
-			
-			g_readySendBuf[SITE_LEN] = len; //数据长度
-			//---------------------重发配置
-			
-			#if USE_SX1262
-			g_rf_info.is_wait_ack_cmd = g_readySendBuf[SITE_CMD]; //需要等待回复
-
-			
-			if((bEvent==EVENT_BOOT)||(bEvent==EVENT_PLUS))
-			{
-				//g_rf_info.re_send_times = 1;						  //重发次数
-				//开机报告和心跳有一次重发	
-				//修改成2次重发				
-				g_rf_info.re_send_times = 2;
-
-				if(g_rf_info.isLost)
-				{
-					g_rf_info.re_plus_times = 1;						//心跳重发次数
-				}
-				else
-				{
-					g_rf_info.re_plus_times = 7;
-				}
-				
-				g_rf_info.wait_plus_timer = (AP_TIM3->CurrentCount)%14+1;
-				LOG("WAIT_PLUS:%d\n",g_rf_info.wait_plus_timer);
-			}
-			else
-			{
-				if(service.m_proto_set==PROTO_SHIKE)
-				{
-					g_rf_info.re_send_times = 3;
-				}
-				else
-				{
-					if((bEvent==EVENT_ALM)||(bEvent==EVENT_TEMP))
-					{
-						g_rf_info.re_send_times = 7;						  //重发次数
-					}
-					else
-					{
-						if(g_rf_info.isLost)
-						{
-							g_rf_info.re_send_times = 3;									//心跳重发次数
-						}
-						else
-						{
-							g_rf_info.re_send_times = 7;
-						}
-					}
-				}	
-			}	
-			#endif
-		}
-		else
-		{
-			g_readySendBuf[SITE_CMD] = Up_Device_Initiative_NeedPara; //命令编码
-
-			g_readySendBuf[SITE_DATA_STAT + len++] = DEVICE_ID;						 //设备类型
-			
-			//通用属性
-			g_readySendBuf[SITE_DATA_STAT + len++] = DEVICE_VER_HARD;			 //硬件版本
-			g_readySendBuf[SITE_DATA_STAT + len++] = DEVICE_VER_SOFT;			 //软件版本
-			g_readySendBuf[SITE_DATA_STAT + len++] = DEVICE_BLE_TYPE;			 //通讯方式
-			g_readySendBuf[SITE_DATA_STAT + len++] = bId;					 	//事件Id
-			g_readySendBuf[SITE_DATA_STAT + len++] = bEvent;				 	//事件类型
-			memcpy(&g_readySendBuf[SITE_DATA_STAT + len],&FirmwareVersion,8);
-			len += 8;
-			
-			//属性
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_smoke_state;
-
-			//230608:烟腔故障，烟雾浓度特殊值
-			if(device_info.state.F_SM_ERR)
-			{
-				g_readySendBuf[SITE_DATA_STAT + len++] = CODE_SMOKE_ERR;
-			}
-			else
-			{
-				g_readySendBuf[SITE_DATA_STAT + len++] = service.m_smoke;
-			}
-			
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_smoke_set;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp_state;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp_almset;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp_rstset;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp_lowset;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_temp_lowrstset;
-			
+	if(event_id != 0xFF)
+	{
+		g_readySendBuf[SITE_CMD] = T_ZONE_EVENT;
+		g_readySendBuf[SITE_DATA_STAT + len++] = T_ZONE_EVENT;
+		g_readySendBuf[SITE_DATA_STAT + len++] = 2;
+		g_readySendBuf[SITE_DATA_STAT + len++] = DEVICE_ID; // 不关心设备类型
+		g_readySendBuf[SITE_DATA_STAT + len++] = event_id;
+		g_readySendBuf[SITE_LEN] = len; //数据长度	
 	
-			if((bEvent==EVENT_BAT)&&(service.m_battery>service.m_battery_set))
-			{
-				service.m_battery = service.m_battery_set;
-			}
-			
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_battery_state;
-			g_readySendBuf[SITE_DATA_STAT + len++] =   service.m_battery>>8;
-			g_readySendBuf[SITE_DATA_STAT + len++] =   service.m_battery&0xff;
-			
-			
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_battery_set>>8;
-			g_readySendBuf[SITE_DATA_STAT + len++] =   service.m_battery_set&0xff;
-			g_readySendBuf[SITE_DATA_STAT + len++] = g_cbSta.isFcOpen;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_muffling;
-			g_readySendBuf[SITE_DATA_STAT + len++] = service.m_heartbeat_time;
-			memset(&g_readySendBuf[SITE_DATA_STAT + len],0,4);		//预留4个字节
-			len += 4;
-			
-			g_readySendBuf[SITE_LEN] = len; //数据长度
-			//---------------------重发配置
-			
-			#if USE_SX1262
-			g_rf_info.is_wait_ack_cmd = g_readySendBuf[SITE_CMD]; //需要等待回复
-			g_rf_info.re_send_times = 3;						  //重发次数
-			#endif	
-		}
-		
+	}
+	else
+	{
+		g_readySendBuf[SITE_CMD] = 0;
+	}
+
+#if USE_SX1262
+		g_rf_info.is_wait_ack_cmd = g_readySendBuf[SITE_CMD]; // 需要等待回复
+		g_rf_info.re_send_times = 3;						  // 重发次数
+#endif
 }
 #if 0
 /*typedef struct
@@ -891,14 +675,8 @@ uint8 LoRa_Ready_send(void)
 		//g_readySendBuf[SITE_CMD] = 0x00;
 
 		//心跳等待唤醒时间统一1.5秒即可
-		if((IS_PROTO_SHIKE)&&(g_readySendBuf[SITE_DATA_STAT+2]==SHIKE_PLUS))
-		{
-			g_rf_info.wait_ack_time = 15;
-		}
-		else
-		{
-			g_rf_info.wait_ack_time = 15 + (AP_TIM3->CurrentCount) % 10; //随机重发时间（1.5-2.5s）
-		}
+		g_rf_info.wait_ack_time = 15;
+
 		
 
 		// UART_PutStr("TX: ");

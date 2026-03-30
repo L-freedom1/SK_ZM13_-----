@@ -101,6 +101,9 @@ __align(4) uint8_t  phyBufRx[256];
 
 #define RF_HW_MAX_RX_TO                    (20000)
 
+#define BLE_ADV_CH  BLE_ADV_CHN39
+#define WHITEN_SEED_CH WHITEN_SEED_CH39
+
 extern uint8 ll_hw_get_tr_mode(void);
 extern volatile uint32 llWaitingIrq;
 /*********************************************************************
@@ -292,8 +295,8 @@ void phy_rf_tx(void)
 {
 		if(IS_PROTO_SHIKE)
 		{
-			s_phy.rfChn         =   BLE_ADV_CHN37;
-      s_pktCfg.wtSeed     =   WHITEN_SEED_CH37;
+			s_phy.rfChn         =   BLE_ADV_CH;
+      s_pktCfg.wtSeed     =   WHITEN_SEED_CH;
 		}
 		
     phy_hw_stop();
@@ -326,8 +329,8 @@ void phy_rf_rx(void)
 {
 		if(IS_PROTO_SHIKE)
 		{
-			s_phy.rfChn         =   BLE_ADV_CHN37;
-      s_pktCfg.wtSeed     =   WHITEN_SEED_CH37;
+			s_phy.rfChn         =   BLE_ADV_CH;
+      s_pktCfg.wtSeed     =   WHITEN_SEED_CH;
 		}
 	
     phy_hw_stop();
@@ -609,13 +612,13 @@ void PhyRf_Init(uint8 task_id)
     s_phy.rxIntv        =   200;//ms
     s_phy.rxAckTO       =   500;//us
     s_phy.rxOnlyTO      =   10*1000;//us
-    s_phy.rfChn         =   BLE_ADV_CHN38;//26;//
+    s_phy.rfChn         =   BLE_ADV_CH;//26;//
     //s_pktCfg.pktFmt     =   RF_PKT_FMT_1M;
 		s_pktCfg.pktFmt     =		0x04;
     s_pktCfg.pduLen     =   31+6;
     s_pktCfg.crcFmt     =   LL_HW_CRC_BLE_FMT;//LL_HW_CRC_BLE_FMT;LL_HW_CRC_NULL
     s_pktCfg.crcSeed    =   DEFAULT_CRC_SEED;
-    s_pktCfg.wtSeed     =   WHITEN_SEED_CH38;//DEFAULT_WHITEN_SEED;
+    s_pktCfg.wtSeed     =   WHITEN_SEED_CH;//DEFAULT_WHITEN_SEED;
     s_pktCfg.syncWord   =   DEFAULT_SYNCWORD;
     //VOID osal_start_timerEx(PhyRf_TaskID, PPP_PERIODIC_TX_EVT, 600);
     VOID osal_start_timerEx(PhyRf_TaskID, PPP_PERIODIC_RX_EVT, 500);
@@ -650,8 +653,8 @@ static void process_rx_done_evt(void)
         s_phy.is_need_send = 0;
 			
         s_phy.Status = RF_RFPHY_TX_ONLY;
-        s_phy.rfChn = BLE_ADV_CHN38;
-        s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+        s_phy.rfChn = BLE_ADV_CH;
+        s_pktCfg.wtSeed = WHITEN_SEED_CH;
         phy_rf_tx();
     }
     else
@@ -666,8 +669,8 @@ static void process_rx_done_evt(void)
         else
         {
             s_phy.Status = RF_RFPHY_RX_ONLY;
-            s_phy.rfChn = BLE_ADV_CHN38;
-            s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+            s_phy.rfChn = BLE_ADV_CH;
+            s_pktCfg.wtSeed = WHITEN_SEED_CH;
             // s_phy.rxScanT0 = read_current_fine_time();
             // LOG("rx dowm %d\r\n",hal_systick());
             phy_rf_rx();            
@@ -684,8 +687,8 @@ static void process_tx_done_evt(void)
     {
         //osal_start_timerEx(PhyRf_TaskID, PPP_PERIODIC_TX_EVT, 40);
 				s_phy.Status = RF_RFPHY_TX_ONLY;
-        s_phy.rfChn = BLE_ADV_CHN38;
-        s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+        s_phy.rfChn = BLE_ADV_CH;
+        s_pktCfg.wtSeed = WHITEN_SEED_CH;
         phy_rf_tx();
 				g_phyFast.fast_send_cnt++;
     }
@@ -701,8 +704,8 @@ static void process_tx_done_evt(void)
 					if(is_tx_again)
 					{
 							s_phy.Status = RF_RFPHY_RX_ONLY;
-							s_phy.rfChn = BLE_ADV_CHN38;
-							s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+							s_phy.rfChn = BLE_ADV_CH;
+							s_pktCfg.wtSeed = WHITEN_SEED_CH;
 							phy_rf_rx();
 							if(is_tx_again>0)
 							{
@@ -720,8 +723,8 @@ static void process_tx_done_evt(void)
 			else
 			{
 					s_phy.Status = RF_RFPHY_RX_ONLY;
-					s_phy.rfChn = BLE_ADV_CHN38;
-					s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+					s_phy.rfChn = BLE_ADV_CH;
+					s_pktCfg.wtSeed = WHITEN_SEED_CH;
 					phy_rf_rx();
 					is_tx_again = 0;
 					g_note.is_tx_busy = 0;//当前发送繁忙状态
@@ -733,8 +736,8 @@ static void process_tx_done_evt(void)
 				if(is_tx_again)
 				{
 							s_phy.Status = RF_RFPHY_RX_ONLY;
-							s_phy.rfChn = BLE_ADV_CHN38;
-							s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+							s_phy.rfChn = BLE_ADV_CH;
+							s_pktCfg.wtSeed = WHITEN_SEED_CH;
 							phy_rf_rx();
 							is_tx_again = 0;
 							//LOG("send again\r\n");
@@ -749,8 +752,8 @@ static void process_tx_done_evt(void)
 		else
 		{
 				s_phy.Status = RF_RFPHY_RX_ONLY;
-				s_phy.rfChn = BLE_ADV_CHN38;
-				s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+				s_phy.rfChn = BLE_ADV_CH;
+				s_pktCfg.wtSeed = WHITEN_SEED_CH;
 				phy_rf_rx();
 				is_tx_again = 0;
 				g_note.is_tx_busy = 0;//当前发送繁忙状态
@@ -791,8 +794,8 @@ uint16 PhyRf_ProcessEvent(uint8 task_id, uint16 events)
     if (events & PPP_PERIODIC_TX_EVT)
     {
         // s_phy.Status = RF_RFPHY_TX_ONLY;
-        // s_phy.rfChn = BLE_ADV_CHN38;
-        // s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+        // s_phy.rfChn = BLE_ADV_CH;
+        // s_pktCfg.wtSeed = WHITEN_SEED_CH;
         // phy_rf_tx();
         s_phy.is_need_send = 1;
         
@@ -809,9 +812,9 @@ uint16 PhyRf_ProcessEvent(uint8 task_id, uint16 events)
 //					LOG("RX_EVT:START\r\n");	
 //				}
         s_phy.Status = RF_RFPHY_RX_ONLY;
-        s_phy.rfChn = BLE_ADV_CHN38;
+        s_phy.rfChn = BLE_ADV_CH;
         s_phy.rxScanT0 = read_current_fine_time();
-        s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+        s_pktCfg.wtSeed = WHITEN_SEED_CH;
         phy_rf_rx();
         return(events ^ PPP_PERIODIC_RX_EVT);
     }
@@ -849,8 +852,8 @@ uint16 PhyRf_ProcessEvent(uint8 task_id, uint16 events)
         {//自检没有接收超时，可能是状态跑偏了， 设置一些接收
             s_phy.self_check_rx = 1;
             s_phy.Status = RF_RFPHY_RX_ONLY;
-            s_phy.rfChn = BLE_ADV_CHN38;
-            s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+            s_phy.rfChn = BLE_ADV_CH;
+            s_pktCfg.wtSeed = WHITEN_SEED_CH;
             phy_rf_rx();
         }
         return(events ^ PPP_RX_CHECK_TIMER);
@@ -878,8 +881,8 @@ void p_Rf_Rx(void)
         {
 			LOG("RF WAKE\r\n");
             s_phy.Status = RF_RFPHY_RX_ONLY;
-            s_phy.rfChn = BLE_ADV_CHN38;
-            s_pktCfg.wtSeed = WHITEN_SEED_CH38;
+            s_phy.rfChn = BLE_ADV_CH;
+            s_pktCfg.wtSeed = WHITEN_SEED_CH;
             // s_phy.rxScanT0 = read_current_fine_time();
             // LOG("rx dowm %d\r\n",hal_systick());
             phy_rf_rx();

@@ -97,7 +97,7 @@
 		#if SET_RX_TRAN
 			#define		USE_SX1262						0
 		#else
-			#define		USE_SX1262						1		//lora°æ±¾
+			#define		USE_SX1262						0		//lora°æ±¾
 			#define		SET_LORA_RL						0
 		#endif
 		

@@ -472,6 +472,7 @@ void alawys_10s_timer(void)
 			service.m_heartbeat_time = 7;
 		}
 		#endif
+		service.m_heartbeat_time = 6;
 	}
 
 	if(s_Cnt10s>=360)

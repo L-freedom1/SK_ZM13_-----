@@ -53,7 +53,7 @@ LR_ROM_XIP  0x11020000 0x014000 {
 	user_rf.o(+RO)
 	event.o(+RO)
 	bell.o(+RO)
-	json.o(+RO)
+	;json.o(+RO)
 	datapool.o(+RO)
 	UserSPI.o(+RO)
 	
@@ -62,14 +62,13 @@ LR_ROM_XIP  0x11020000 0x014000 {
 	sx126x.o(+RO)
 	sx1262-board.o(+RO)
 	
-	note_profile.o(+RO)
 	
-	bc95.o(+RO)
-	proto.o(+RO)
+	;bc95.o(+RO)
+	;proto.o(+RO)
 	
-	AIR720.o(+RO)
-	proto_202.o(+RO)
-	user_json.o(+RO)
+	;AIR720.o(+RO)
+	;proto_202.o(+RO)
+	;user_json.o(+RO)
   }
  }  
 

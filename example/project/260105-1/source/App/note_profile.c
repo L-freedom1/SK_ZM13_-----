@@ -1,8 +1,8 @@
 /*
  * @Author: your name
  * @Date: 2021-10-07 16:36:53
- * @LastEditTime: 2025-07-09 17:19:17
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2026-03-30 10:21:07
+ * @LastEditors: leodjh1 33412386+leodjh1@users.noreply.github.com
  * @Description: 2.4G 设备接入协议，节点协议部分
  * @FilePath: \SK_ZH101\project\peripheral\ZH101\Source\note_profile.h
  */
@@ -497,7 +497,7 @@ void note_comm_tran_up(unsigned char *SendBuf, unsigned char times, unsigned sho
     unsigned char len = 0;
     //unsigned char tx_num = (++g_note.tx_num)%64;
     unsigned char tx_num;
-    unsigned char v_temp_len = 0;//V字段数据长度
+
     //应答包的包序采用接收包包序
     if(is_ack)
     {
@@ -505,24 +505,9 @@ void note_comm_tran_up(unsigned char *SendBuf, unsigned char times, unsigned sho
     }
     else
     {
-        if(g_isRfRetry)
-        {
-            g_isRfRetry = 0;
-            tx_num = g_note.tx_num%64;
-        }
-        else
-        {
-            tx_num = (++g_note.tx_num)%64;
-        }
-    }
-
-    //221205:时刻协议只发LORA
-    if(IS_PROTO_SHIKE)
-    {
-	   //221230: 安防模式也有可能未接lora芯片
-       //g_device_info.isok_get_Lora = 1;
-	   g_rf_send.send_fail_count = 1;
-       return;
+        tx_num = (++g_note.tx_num)%64;
+				user_fs_isNeedSave = 1;
+			  RF_Num = g_note.tx_num;
     }
 
     profile_set_up(tx_num);//设置上行包
@@ -546,37 +531,26 @@ void note_comm_tran_up(unsigned char *SendBuf, unsigned char times, unsigned sho
     #endif
     tx_buf[len++] = 0x00;
 
-    tx_buf[len++] = T_TRAN;//命令
-    tx_buf[len++] = 0;//没有数据长度0
 
-    /* V字段 */
-    v_temp_len = len;
-    
-    /*地址*/
-    tx_buf[len++] = 0xfa;
-    /*数据*/
-    tx_buf[len++] = SendBuf[SITE_CMD];			   //命令编码
-    memcpy(&tx_buf[len],&SendBuf[SITE_DATA_STAT],SendBuf[SITE_LEN]);
+    memcpy(&tx_buf[len], &SendBuf[SITE_DATA_STAT], SendBuf[SITE_LEN]);
     len += SendBuf[SITE_LEN];
 
-    tx_buf[SITE_L] = len - v_temp_len;
     len++;//空一下校验字段
     tx_buf[SITE_ALL_LEN] = len - 1;
     tx_buf[len - 1] = profile_check(tx_buf, len - 1, PROFILE_UP);
     
-
     if(is_ack)
     {
         memcpy(g_rf_ackbak.send_buf,tx_buf,len);    				//备份回复包
         g_rf_ackbak.send_len = len;
-		note_set_send(tx_buf, len, 0, COMM_RESEND_TIME);		//透传强行设置
+				note_set_send(tx_buf, len, 0, COMM_RESEND_TIME);		//透传强行设置
     }
     else
     {
-        note_set_send(tx_buf, len, 8, COMM_RESEND_TIME);		//透传强行设置
+        note_set_send(tx_buf, len, 8, COMM_RESEND_TIME); // 透传强行设置
     }
-    
-	//LOG("isAck=%d\r\n",is_ack);
+
+    //LOG("isAck=%d\r\n",is_ack);
     //note_set_send(tx_buf, len, times, resend_interval);//发送
 		
 }
@@ -870,6 +844,24 @@ void note_resend_scan(void)
     #endif
 }
 
+/**
+ * @description: 检测目标是发给谁的 UID 
+ * @param {u8} *src_uid 来源UID
+ * @param {u8} *tar_uid 目标UID
+ * @param {u8} addr 地址 广播控制多个时使用
+ * @return {*}
+ */
+u8 device_check_addr(u8 *src_uid, u8 *tar_uid, u8 addr)
+{
+	u8 ret = 0;
+
+    if (/* memcmp(&g_device_info.memory.all_info.main_id[0], src_uid, 6) == 0 && */ memcmp(&g_note.device_uid[0], tar_uid, 6) == 0)
+    {//开关面板
+        ret = DEVICE_ID;
+    }
+    return ret;
+}
+
 
 
 /**
@@ -881,6 +873,7 @@ void note_resend_scan(void)
  */
 void note_rx_deal(unsigned char *rx_dat, unsigned short len, unsigned char rssi, unsigned short phyFoff)
 {
+    unsigned char t_src = 0;
     // LOG("<<");
     UP_DOWN up_down = PROFILE_NULL;//收到的是什么包上行包还是下行包
 #if(TEST_TX || TEST_RX)
@@ -965,172 +958,18 @@ void note_rx_deal(unsigned char *rx_dat, unsigned short len, unsigned char rssi,
         g_note.rx_type = MULTICAST;
     }
 
-    switch (rx_dat[SITE_T])
-    {
-    case T_SCAN_GATEWAY: //  0x00//扫描附近网关及应答
-        if (g_note.is_scan_status && g_note.cur_scan_num < MAX_SCAN_NUM)
-        { //如果在扫描状态, 添加扫描结果
-            LOG("gateway ack\r\n");
-            unsigned char no = note_is_already_scan(rx_dat, rssi);
-            if (no == 0)
-            { //如果当前队列里面没有重复的
-                memcpy(g_note.scan_result[g_note.cur_scan_num].uid, &rx_dat[SITE_SRC_UID], 6);
-                g_note.scan_result[g_note.cur_scan_num].rssi = rssi;
-                g_note.scan_result[g_note.cur_scan_num].hop_times = (rx_dat[SITE_MULTIHOP] & 0x0F);
-                g_note.cur_scan_num++;
-                LOG("add gateway num:%d\r\n",g_note.cur_scan_num);
-            }
-            else
-            {//当前已经存在 则更新信号强度和多跳次数
-                if(g_note.scan_result[no - 1].hop_times > (rx_dat[SITE_MULTIHOP] & 0x0F))
-                {//如果这次过来的跳数更少 更新数据
-                    g_note.scan_result[no - 1].hop_times = (rx_dat[SITE_MULTIHOP] & 0x0F);
-                    g_note.scan_result[no - 1].rssi = rssi;
-                }
-                else if(g_note.scan_result[no - 1].hop_times == (rx_dat[SITE_MULTIHOP] & 0x0F))
-                {//如果这次过来的跳数一致
-                    if(g_note.scan_result[no - 1].rssi > rssi)
-                    {//信号有更好的话也更新数据
-                        g_note.scan_result[no - 1].rssi = rssi;
-                    }
-                }          
-            }
+    t_src = device_check_addr(&rx_dat[SITE_SRC_UID], &rx_dat[SITE_TAR_UID], 0);
+
+    if (profile_is_ack(rx_dat[SITE_NUM]) && t_src)
+    { // 是应答包
+        if ((rx_dat[SITE_T] == g_rf_send.send_buf[SITE_T]) && ((rx_dat[SITE_NUM] % 64) == (g_rf_send.send_buf[SITE_NUM] % 64)))
+        { // 并且命令一样 则关闭重发
+            note_close_resend();
         }
-        break;
-    case T_REG_NET: //       0x01//节点设备注网及心跳（上行）
-        if(g_note.rx_type == NOTECAST)
-        {//发给本节点
-            if (rx_dat[SITE_V] == 1)
-            { //注网成功 
-							
-                //切换主机的时候主动上报心跳
-                if(memcmp(g_note.gateway_uid,&rx_dat[SITE_SRC_UID],6)!=0)
-                {
-                    //is_need_report_flag_1;
-                    //0718省电设备：切换主机不主动发心跳
-                    #if SET_BAT_WORK
-                    #else
-                    g_device_info.DeviceStatus.b.is_need_heart_report = 1;
-                    #endif
-                }
-								
-                memcpy(g_note.gateway_uid, &rx_dat[SITE_SRC_UID], 6);
-                g_note.rssi = rssi;
-            
-                //通讯成功率测试不需要去重发
-//                if(g_DeviceStatus!=DEVICE_STA_TEST_RUN)
-                {
-                    LOG("reg net secc\r\n");
-                    note_close_resend();
-
-                    if (g_note.reg_status == 0)
-                    { 
-                        g_note.reg_status = 1;
-                        if(g_note.is_need_report)
-                        {
-                            g_note.is_need_report = 0;
-                            //is_need_report_flag_1;
-                            #if SET_BAT_WORK
-                            #else
-                            g_device_info.DeviceStatus.b.is_need_heart_report = 1;
-                            #endif
-                        }                    
-                    }
-                }
-//                else
-//                {
-//                    g_rf_send.send_test_ok++;   //成功率
-//                    g_rf_send.wait_ack_timer = g_rf_send.wait_ack_time;
-//                } 
-                g_note.reg_status = 1;   
-            }
-            else
-            { //注网失败
-                LOG("reg net err %d\r\n", rx_dat[SITE_V]);
-                /* 换一个 继续注网 */
-                if (note_get_max_rssi_gateway())
-                { //找到 信号最好的
-                    note_reg_net(g_note.scan_result[note_get_max_rssi_gateway() - 1].uid);
-                    g_note.scan_result[note_get_max_rssi_gateway() - 1].is_cannot_reg = 1; //已经尝试注册过了，标记一下，如果失败就不注册这个了
-                }
-            }
-        }
-        break;
-    #if 0
-    case T_GATEWAY_START_UP: //  0x02//网关设备上电
-        if(memcmp(g_note.gateway_uid, &rx_dat[SITE_SRC_UID], 6) == 0)
-        {//如果当前注册的网关重启了，需要重新注册一下
-            LOG("gateway start up\r\n");
-            g_note.reg_status = 0;
-            note_start_scan_reg();
-        }
-        break;
-    #endif
-    case T_TRAN: //          0x03//LoRa 透传 指令
-        if (g_note.rx_type == NOTECAST)
-        { //发给本节点
-            LOG("tran data\r\n");
-            g_note.rssi = rssi;
-            if(profile_is_ack(rx_dat[SITE_NUM]))
-            {//是应答包 
-                LOG("ack data\r\n");
-
-                #if USE_SX1262	
-                g_rf_info.is_wait_ack_cmd = 0;
-                g_rf_info.re_send_times = 0;	
-                #endif							
-                //220307: 
-                // if(rx_dat[SITE_T] == g_rf_send.send_buf[SITE_T])
-                if((rx_dat[SITE_T] == g_rf_send.send_buf[SITE_T]) &&  ((rx_dat[SITE_NUM]%64) ==(g_rf_send.send_buf[SITE_NUM]%64)) )
-                {//并且命令一样 则关闭重发
-                    note_close_resend();
-                }  
-
-                //221115:接收包解析数据
-                g_note.p_rx_cb(rx_dat, len, rssi);//接受数据回调 用户处理          
-            }
-            else
-            {//非应答包
-                LOG("deal data\r\n");
-
-                //需要判断一下重复包直接回复，不需要再处理
-                if(g_note.rx_num==(rx_dat[SITE_NUM]&0x3f))
-                {
-                    rf_tx(g_rf_ackbak.send_buf, g_rf_ackbak.send_len,0);  
-                    return;
-                }
-
-                g_note.rx_num = rx_dat[SITE_NUM]&0x3f;
-
-                g_rf_send.is_already_ack = 0;//需要判别是否是应答包
-                g_note.p_rx_cb(rx_dat, len, rssi);//接受数据回调 用户处理
-								
-                //211019 有数据需要发送直接设置成应答包，不需要再单纯确认回复
-                //220104 有可能需要回复的包，不能设置为应答包？
-								if(g_readySendBuf[SITE_CMD])
-                {
-                    g_rf_send.is_already_ack = 1;
-                }
-							
-                if(g_rf_send.is_already_ack == 0)
-                {//协议解析没有应答，需要再应答一下
-                    note_comm_ack(rx_dat[SITE_T]);
-                }
-            }
-
-            //221115:可以切换
-            //if(g_note.reg_status == 0)
-            {//如果当前是未注网的
-                memcpy(g_note.gateway_uid, &rx_dat[SITE_SRC_UID], 6);
-                g_note.reg_status = 1;//当前注网状态
-            }
-
-            
-        }
-        break;
-    default:
-        break;
+        memcpy(g_note.gateway_uid, &rx_dat[SITE_SRC_UID], 6);
+        g_note.reg_status = 1;//当前注网状态
     }
+  
 #endif
 }
 
@@ -1145,48 +984,10 @@ void note_process(void)
     static unsigned char _10ms_count = 0;
     static unsigned char _100ms_count = 0;
 
-#if(TEST_TX)
-    test_lose_pack_per();
-#elif(TEST_RX == 0)
+
     note_resend_scan();
 
-    //221115:不需要扫描注册
-    g_note.reg_status = 1;  
-	#if 1
-    //不需要维持心跳
-    if(g_note.reg_status)
-    {
-        
-    }
-    else
-    {
-        //唤醒最多只扫描一次
-        //if(g_note.reg_timer == 0)
-				//有rf需要发送才扫描
-				if((g_note.reg_timer == 0)&&Rf_is_Busy())
-        {
-            note_start_scan_reg();
-        }
-    }
-    #else
-    if(g_note.reg_status)
-    {//如果当前已经注册
-        
-        if(g_note.heartbeat_timer > HEARTBEAT_TIME) 
-        {//心跳计时 超时60s
-            g_note.heartbeat_timer = 0;
-            note_reg_net(g_note.gateway_uid);
-        }
-    }
-    else
-    {//如果没有注册
-        if(g_note.reg_timer == 0)
-        {//间隔30s 重新扫描注网
-            note_start_scan_reg();
-        }
-    }
-    #endif
-
+#if 1
     if(++_10ms_count >= 10)
     {//100ms 跑一次
         _10ms_count = 0;

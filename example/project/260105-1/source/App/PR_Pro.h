@@ -1,8 +1,8 @@
 /*
  * @Author: dujianhuang
  * @Date: 2019-08-30 15:24:46
- * @LastEditors: error: git config user.name && git config user.email & please set dead value or install git
- * @LastEditTime: 2022-12-05 20:47:57
+ * @LastEditors: leodjh1 33412386+leodjh1@users.noreply.github.com
+ * @LastEditTime: 2026-03-30 10:15:09
  */
 
 #ifndef _PR_PRO_H_
@@ -130,6 +130,22 @@
 	#define	DOWN_SET_ALL					0x8f
 //------下发指令应答
 	#define	UP_ACK_COMMAND	0x91
+
+		/* 防区事件上报 */
+#define ZONE_EVT_CLOSE   0x00//关门/拔卡
+#define ZONE_EVT_OPEN   0x01//开门/插卡
+#define ZONE_EVT_LOW_POWER   0x03//低压上报
+#define ZONE_EVT_START_UP   0x04//开机
+// #define ZONE_EVT_   0x05//防拆拆开
+// #define ZONE_EVT_   0x06//防拆恢复
+// #define ZONE_EVT_   0x07//防区恢复
+// #define ZONE_EVT_   0x08//防区短路
+// #define ZONE_EVT_   0x09//防区开路
+#define ZONE_EVT_ALARM   0x0A//设备报警
+// #define ZONE_EVT_   0x0B//设备消警
+// #define ZONE_EVT_   0x0C//设备布防
+// #define ZONE_EVT_   0x0D//设备撤防
+#define ZONE_EVT_HEARTBEAT   0x30//心跳
 
 /*全局变量声明*/
 //-----固件版本
