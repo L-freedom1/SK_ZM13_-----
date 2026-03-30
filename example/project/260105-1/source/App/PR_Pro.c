@@ -2,7 +2,7 @@
  * @Author: dujianhuang
  * @Date: 2019-08-30 15:24:46
  * @LastEditors: leodjh1 33412386+leodjh1@users.noreply.github.com
- * @LastEditTime: 2026-03-30 10:16:03
+ * @LastEditTime: 2026-03-30 14:02:37
  */
 /**********************************************************/
 /*  公司名称：泉州时刻有限公司     			              */
@@ -212,6 +212,7 @@ void pAddSendBuf(u8 bId,u8 bEvent)
 {
 	u8 len = 0;
 	u8 event_id = 0xFF;
+	// unsigned char v_temp_len = 0;//V字段数据长度
 
 	// 报警参数1字节
 	switch (bEvent)

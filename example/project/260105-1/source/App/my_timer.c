@@ -1,8 +1,8 @@
 /*
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2023-05-18 16:35:08
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2025-07-18 16:59:21
+ * @LastEditors: leodjh1 33412386+leodjh1@users.noreply.github.com
+ * @LastEditTime: 2026-03-30 14:03:21
  * @FilePath: \source\App\my_timer.c
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -168,8 +168,6 @@ void note_set_ble_debug(void)
 {
 		/*填充内容*/
     u8 tx_buf[256];
-    static u8 rf_buf[3];
-    char *rf_code;
 	
     u16 len = 0;
     unsigned char tx_num = (++g_note.tx_num)%64;
@@ -227,7 +225,7 @@ void note_set_ble_debug(void)
     index = strlen((const char *)&tx_buf[v_temp_len]);
 
 		sprintf((char *)&tx_buf[v_temp_len+index],"电池电压:%dmV\r\n",service.m_battery);
-    index = strlen(&tx_buf[v_temp_len]);
+    index = strlen((const char *)&tx_buf[v_temp_len]);
 			
     sprintf((char *)&tx_buf[v_temp_len+index],"温度:%d℃\r\n",service.m_temp);
     index = strlen((const char *)&tx_buf[v_temp_len]);
@@ -440,7 +438,7 @@ void fKeyPro(void)
 						//如果是查询，需要等获取到参数
 						Event_AddEvent(EVENT_TEST);
 
-						DEBUG_LOG("自检上报");
+						LOG("自检上报");
 						
 						//取消效应
 						if(service.m_muffling==1) 

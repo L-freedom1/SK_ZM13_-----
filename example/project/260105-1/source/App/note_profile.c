@@ -493,7 +493,7 @@ void note_comm_tran_up(unsigned char cmd1, unsigned char cmd2, unsigned char tim
  */
 void note_comm_tran_up(unsigned char *SendBuf, unsigned char times, unsigned short resend_interval,unsigned char is_ack)
 {
-    unsigned char tx_buf[50];
+    unsigned char tx_buf[250];
     unsigned char len = 0;
     //unsigned char tx_num = (++g_note.tx_num)%64;
     unsigned char tx_num;

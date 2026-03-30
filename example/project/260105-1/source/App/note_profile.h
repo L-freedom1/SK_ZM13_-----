@@ -37,6 +37,7 @@
 #define T_GATEWAY_START_UP  0x02//网关设备上电
 #define T_TRAN          0x03//LoRa 透传 指令
 #define T_ZONE_EVENT 0x87    //防区事件上报
+#define T_TRAN_DEBUG    0x0f
 
 /* 最大扫描 数量 */
 #define MAX_SCAN_NUM    20

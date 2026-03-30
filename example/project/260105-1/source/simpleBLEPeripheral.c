@@ -74,6 +74,7 @@
 // Offset of advertData&scanRspData
 #define	RSP_OFFSET_MAC							4
 
+#define OTA_PASSWD  "ZM13"
 /*********************************************************************
  * build define
  */
@@ -177,7 +178,7 @@ static uint8 advertData[] =
 		#if SET_LORA_RL
     'Y', 'G', '0','0','3','-','L','B','3','_', '2', '6', '0', '1', '0', '5',
 		#else
-		'Y', 'G', '0','0','3','-','L','B','2','_', '2', '5', '0', '7', '2', '2',
+		'Z', 'M', '1','3','_','2','6','0','3','3', '0', ' ', ' ', ' ', ' ', ' ',
 		#endif
 		
 		#if SET_ALL_DATA
@@ -389,9 +390,10 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 		#if SET_LORA_RL
     uint8	OTA_Passward_AscII[9]	=	{'Y','G','0','0','3','-','L','B','3'};
 		#else
-		uint8	OTA_Passward_AscII[9]	=	{'Y','G','0','0','3','-','L','B','2'};
+		// uint8	OTA_Passward_AscII[9]	=	{'Y','G','0','0','3','-','L','B','2'};
 		#endif
-    ota_app_AddService_UseKey(9,OTA_Passward_AscII);
+    // ota_app_AddService_UseKey(9,OTA_Passward_AscII);
+    ota_app_AddService_UseKey(osal_strlen(OTA_PASSWD), (uint8*)OTA_PASSWD);
     #else
     uint8	OTA_Passward_AscII[8]	=	{'Y','G','0','0','3','-','L','B'};
     

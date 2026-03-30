@@ -67,7 +67,7 @@
 		#define		SET_PROTO_VER			0
 	#endif
 
-	#define			SET_BLE_DEBUG			0
+	#define			SET_BLE_DEBUG			1
 
 	//NBÐèÒª¹ØµôLOG,DEBUG_INFO==0
 	#if SET_CAT1
