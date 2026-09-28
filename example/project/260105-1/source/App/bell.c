@@ -28,7 +28,7 @@ u16 g_EX_long = 0;     // 外接喇叭提示音长度
 u8  g_EX_times = 0;	 		// 外接喇叭提示音几声
 static u16 count_EX  = 0;  // 外接喇叭提示计数
 
-#define PWM_IO_DA		GPIO_P25
+#define PWM_IO_DA		GPIO_DUMMY
 //#if SET_VER_TK
 //		#define PWM_FREQ 				800
 

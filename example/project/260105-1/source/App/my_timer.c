@@ -22,6 +22,7 @@
     INCLUDES
 */
 #include "my_timer.h"
+#include "user_1527.h"
 
 u16 bWatchDog1s;
 
@@ -125,7 +126,8 @@ void fKeyCheck(eTypedefEnum KeyType,u8 KeyCurSta) //10ms进入一次
 	//短按0.2s
 	if(Key[KeyType].TCount == 20)
 	{	
-		Key[KeyType].Flag.b.ShortPress = 1;	
+		Key[KeyType].Flag.b.ShortPress = 1;
+		user_1527_tx(0x888888);	
 	}
 	#if 0
 	else if((Key[KeyType].TCount == 100)&&(g_device_info.RunTime<40))
@@ -1429,6 +1431,8 @@ void timer_int_process(uint8_t evt)
 
     case HAL_EVT_TIMER_6:
         //LOG("t6\n");
+        /* 433M 1527 发送节拍(50us), 不发送时定时器是关闭的 */
+        user_1527_tick();
         break;
 
     case HAL_EVT_WAKEUP:
@@ -1437,6 +1441,7 @@ void timer_int_process(uint8_t evt)
 			hal_timer_init(timer_int_process);
 			#if 1
 			hal_timer_set(AP_TIMER_ID_5,100);
+			hal_timer_set(AP_TIMER_ID_6,50);
 			#else
 			hal_timer_set(AP_TIMER_ID_5,1000);		
 			#endif
@@ -1472,6 +1477,7 @@ void TIMER_config(void)
 		//#if SET_RX_TRAN
 		#if 1
 		hal_timer_set(AP_TIMER_ID_5,100);	//100us
+		hal_timer_set(AP_TIMER_ID_6, 50);
 		#else
 		hal_timer_set(AP_TIMER_ID_5,1000);	//1ms
 		#endif

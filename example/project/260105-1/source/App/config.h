@@ -51,8 +51,9 @@
 	#define		SET_TEST_WAKE
 
 	//硬件版本
-	#define		SET_CAT1								0
-	#define		SET_NB									0			
+//[停用]NB-IoT/Cat1 暂停使用，相关调用已在 app_main.c 中注释，改用 433M 1527
+#define		SET_CAT1								0
+#define		SET_NB									0			
 	#define 	SET_SPI									1
 	#define		SET_RX_TRAN							0	//厂测，协议转换
 	#define		SET_TEST_SLEEP					0
@@ -97,6 +98,7 @@
 		#if SET_RX_TRAN
 			#define		USE_SX1262						0
 		#else
+			//[停用]LoRa 暂停使用，相关调用已在 app_main.c 中注释，改用 433M 1527
 			#define		USE_SX1262						0		//lora版本
 			#define		SET_LORA_RL						0
 		#endif

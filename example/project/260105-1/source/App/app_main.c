@@ -22,7 +22,7 @@
 */
 
 #include "app_main.h"
-
+#include "user_1527.h"
 
 
 extern void p_Rf_Rx(void);
@@ -242,6 +242,7 @@ bool fIsNeedSleep(void)
 	if (sleepTimer == 0								//外部中断
 		&& Rf_is_Busy() == 0						//RF发送完毕
 			&& Event_IsEmpty()						//事件发完
+			&& (user_1527_is_tx_busy()==0)			//433M 1527发送完毕(休眠会停掉发送定时器)
 			#if SET_SPI==0
 			&& TouchSend.isSleep==1				//串口休眠
 			#endif
@@ -719,8 +720,8 @@ void app_main_init(uint8 task_id)
 	
 	#if USE_SX1262
 	g_device_info.isok_get_Lora = 1;
-	RFM96_Config();
-	RFM96_LoRaEntryRx();			//进入接收模式
+	//[停用LoRa]RFM96_Config();
+	//[停用LoRa]RFM96_LoRaEntryRx();			//进入接收模式
 	LOG("isok_get_Lora=%d",g_device_info.isok_get_Lora);
 	
 	//开机检测是否焊接lora芯片
@@ -822,8 +823,8 @@ void rf_100ms_timeout(void)
         { // 超时5秒未进入接收状态，重新配置RMF98模块
             iTimer_RFM98_nRX = 0;
 							
-            RFM96_Config();      // setting base parameter
-            RFM96_LoRaEntryRx(); // 进入接收模式				
+            //[停用LoRa]RFM96_Config();      // setting base parameter
+            //[停用LoRa]RFM96_LoRaEntryRx(); // 进入接收模式				
 		}
     }
 	
@@ -885,7 +886,7 @@ void pRfSendBuf(void)
 	if((g_device_info.isok_get_Lora==1) && ((g_rf_send.send_fail_count>0)|| g_rf_info.is_lora_ack ))
 	{
 		g_rf_info.wait_ack_timer = 0;	//重发计时需要清空
-		LoRa_Ready_send();				//需要发送
+		//[停用LoRa]LoRa_Ready_send();				//需要发送
 	}
 	#endif
 
@@ -1077,7 +1078,7 @@ void p_RunPro(void)
 		if(g_is100msTouch)
 		{
 			g_is100msTouch = 0;
-			rf_100ms_timeout();
+			//[停用LoRa]rf_100ms_timeout();
 		}
 	}
 	#endif
@@ -1132,13 +1133,13 @@ void fSleepPro(void)
 	{
 		#if SET_NB
 			#if NB_MODULE==NB_N306
-			NB_setBand();
+			//[停用NB]NB_setBand();
 			#endif
 		#endif
 
 		#if NB_MODULE==NB_N701
 		LOG("软件关机\r\n");
-		p_nblc_common_func(TRUE, "ECPOWD=0",	"DOWN",3000, NULL,FALSE);
+		//[停用NB]p_nblc_common_func(TRUE, "ECPOWD=0",	"DOWN",3000, NULL,FALSE);
 		#endif
 
 		//直接断电
@@ -1146,7 +1147,7 @@ void fSleepPro(void)
 		//230617:开机标定不操作进入PSM，直接掉电处理
 			#if SET_USE_PSM
 			if(g_cbSta.isBd==0)
-				NB_PsmSleep();
+				//[停用NB]NB_PsmSleep();
 
 			g_cbSta.isBd = 0;
 
@@ -1160,7 +1161,7 @@ void fSleepPro(void)
 				else
 				{
 					g_device_info.TryPsmCnt = 0;
-					SET_ME3616_POW_EN(OFF_POW_NB);
+					//[停用NB]SET_ME3616_POW_EN(OFF_POW_NB);
 					LOG("NB off\r\n");
 				}
 				//g_run_info.m_nbiot_canbe_init = TRUE;
@@ -1182,12 +1183,12 @@ void fSleepPro(void)
 			else
 			{
 				//不管进没进PSM模式，唤醒操作一下
-				NB_PsmWake();
+				//[停用NB]NB_PsmWake();
 			}
 			#else
 			g_run_info.m_flg_psm = FLASE;
 		
-			SET_ME3616_POW_EN(OFF_POW_NB);
+			//[停用NB]SET_ME3616_POW_EN(OFF_POW_NB);
 
 			//g_run_info.m_nbiot_canbe_init = TRUE;
 			g_run_info.m_nbiot_init_ok = FALSE;
@@ -1205,8 +1206,8 @@ void fSleepPro(void)
 		#endif
 
 		#if SET_CAT1
-		SET_LTE_PWR_C(1);
-		SET_LTE_RST_N(0);
+		//[停用CAT1]SET_LTE_PWR_C(1);
+		//[停用CAT1]SET_LTE_RST_N(0);
 		g_device_info.isNbSleep = 1;
 		g_run_info.m_nbiot_init_ok = FALSE;
 		g_run_info.m_flg_sending = FALSE;
@@ -1233,7 +1234,7 @@ void fSleepPro(void)
 			//操作AT 确认一下是否处于唤醒状态,如果唤醒则操作休眠一次
 			//dbg_printf("\r\n");
 			//WaitMs(30);
-			if (p_nblc_communic_test() == TRUE)
+			if (0/*[停用NB]原: p_nblc_communic_test() == TRUE*/)
 			{
 				g_device_info.TryPsmCnt++;
 				if(g_device_info.TryPsmCnt<2)
@@ -1247,7 +1248,7 @@ void fSleepPro(void)
 				else
 				{
 					g_device_info.TryPsmCnt = 0;
-					SET_ME3616_POW_EN(OFF_POW_NB);
+					//[停用NB]SET_ME3616_POW_EN(OFF_POW_NB);
 					g_run_info.m_flg_psm = FLASE;
 				}
 			}
@@ -1261,9 +1262,9 @@ void fSleepPro(void)
 	/*休眠判断*/
 	#if USE_SX1262
 	#if 1
-	if (fIsNeedSleep() && (g_device_info.isBoot==0) && ((iStatus_RF==RFM98_SLEEP)||(g_device_info.isok_get_Lora==0)))
+	//[停用LoRa]if (fIsNeedSleep() && (g_device_info.isBoot==0) && ((iStatus_RF==RFM98_SLEEP)||(g_device_info.isok_get_Lora==0)))
 	#else
-	if (fIsNeedSleep() && ((iStatus_RF==RFM98_SLEEP)||(g_device_info.isok_get_Lora==0)))
+	//[停用LoRa]if (fIsNeedSleep() && ((iStatus_RF==RFM98_SLEEP)||(g_device_info.isok_get_Lora==0)))
 	#endif
 	#else
 	if (fIsNeedSleep()) //非事件等待发送&&开机发送不出，会导致事件存在队列中，而无法休眠
@@ -1466,7 +1467,7 @@ uint16 app_main_process_Event(uint8 task_id, uint16 events)
 				//有事件才需要启动模块
 				if(IsNeedRfSleep()==0)
 				{
-					NB_pro();
+					//[停用NB]NB_pro();
 				}
 
 				//4分钟无信号清除事件
@@ -1516,11 +1517,11 @@ uint16 app_main_process_Event(uint8 task_id, uint16 events)
 		#if USE_SX1262
 		if(g_device_info.isok_get_Lora==1)
 		{
-			RFM98_Process();
+			//[停用LoRa]RFM98_Process();
 
 			if(g_isNeedChklora)
 			{
-				if(RF_cad_check_channel2(RF_FREQUENCY_SHIKE)==0)
+				if(0/*[停用LoRa]原RF_cad_check_channel2*/==0)
 				{
 					g_isLoraFree =  1;
 				}
